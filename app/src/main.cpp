@@ -4,6 +4,8 @@
 
 #define SLEEP_TIME_MS 1000
 
+# Used by Dr Barry on Norid nRF52840-DK Board for LED0 Blink
+
 /* The devicetree node identifier for the "led0" alias. */
 #define LED_NODE DT_ALIAS(led0)
 
