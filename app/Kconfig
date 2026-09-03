@@ -57,4 +57,10 @@ endif # LED_ADVANCED
 
 endif # LED_SUBSYSTEM
 
+# Timer for led0 overaly
+config APP_HEARTBEAT_PERIOD_MS
+    int "Timer for Heartbeat on led0(ms)"
+    range 100 2000
+    default 500
+
 source "Kconfig.zephyr"
