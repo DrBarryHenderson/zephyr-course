@@ -1,0 +1,7 @@
+board:
+  name: my_board
+  full_name: My Board from Scratch
+  vendor: iomoco
+  socs:
+  # Physical nRF52840 SoC on PCA10056
+  - name: nrf52840
