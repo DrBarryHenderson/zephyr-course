@@ -12,7 +12,7 @@
 
 / {
 	model = "Our Board";
-	compatible = "iomoco,our-board";
+	compatible = "iomoco,our_board";
 
 	chosen {
 		zephyr,console = &uart0;

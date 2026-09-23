@@ -1,4 +1,5 @@
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
@@ -18,6 +19,24 @@
 static const struct gpio_dt_spec hbeat_led = GPIO_DT_SPEC_GET(HBEAT_LED_NODE, gpios);
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
+
+namespace {
+  // led_on = true:  sensor_sample_fetch() -> our driver turns LED2 ON
+  // led_on = false: sensor_channel_get()  -> our driver turns LED2 OFF
+  void test(bool led_on) {
+    const struct device* driver = DEVICE_DT_GET(DT_NODELABEL(our_driver0));
+
+    if (led_on) {
+      int ret = sensor_sample_fetch(driver);
+      LOG_INF("Sample fetch ret %d, LED2 is now ON", ret);
+    } else {
+      struct sensor_value val;
+      int ret = sensor_channel_get(driver, SENSOR_CHAN_AMBIENT_TEMP, &val);
+      LOG_INF("Channel get ret %d, LED2 was %s, now OFF", ret, val.val1 ? "ON" : "OFF");
+    }
+   }
+  }
+
 
 int main(void)
 {
@@ -46,6 +65,8 @@ int main(void)
         hbeat_led_state = !hbeat_led_state;
         // Print out the Heartbeat led state
         LOG_INF("Heartbeat LED state: %s", hbeat_led_state ? "ON" : "OFF");
+        // Ask our driver to turn LED2 ON (fetch) or OFF (channel get) to match the heartbeat
+        test(hbeat_led_state);
         // WAIT for HEARTBEAT Delay Heart beat LED
         k_msleep(CONFIG_APP_HEARTBEAT_PERIOD_MS);
     }

@@ -1,5 +1,14 @@
 / {
 	aliases {
 		app-led = &led0;
+		app-led2 = &led2; // new LED alias controlled by channel_get_my_impl() in our_driver.c
+	};
+};
+
+/ {
+	our_driver0: our_driver {
+		compatible = "our,driver";
+		status = "okay";
+		led = <&led2>;  // LED controlled by our_driver()
 	};
 };

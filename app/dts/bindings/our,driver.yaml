@@ -1,0 +1,9 @@
+description: Our simple GPIO Driver
+compatible: "our,driver"
+include: base.yaml
+
+properties:
+  led:
+    type: phandle
+    required: true
+    description: LED node (from a gpio-leds node) that this driver reads and toggles
