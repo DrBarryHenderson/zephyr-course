@@ -5,6 +5,8 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 
+#include "our_driver.h"
+
 LOG_MODULE_REGISTER(our_driver, LOG_LEVEL_INF);
 
 // Constant (read-only) settings for our device, filled in from the devicetree
@@ -12,13 +14,26 @@ struct our_driver_config {
     struct gpio_dt_spec led;
 };
 
+// Dynamic (read/write) data for our device, can change while running
+struct our_driver_data {
+    bool led_enabled;       // false = sample_fetch will NOT turn LED2 ON
+    uint32_t fetch_count;   // how many times sample_fetch has been called
+};
+
 // sensor_sample_fetch(): turns the LED ON
 static int sample_fetch_my_impl(const struct device *dev,
                                 enum sensor_channel chan)
     {
         const struct our_driver_config *config = dev->config;
+        struct our_driver_data *data = dev->data;
 
-        LOG_INF("Hello from Sensor Sample Fetch, channel %d", chan);
+        data->fetch_count++;
+        LOG_INF("Hello from Sensor Sample Fetch, channel %d, fetch #%u", chan, data->fetch_count);
+
+        if (!data->led_enabled) {
+            LOG_INF("LED2 is disabled, leaving it OFF");
+            return 0;
+        }
 
         // 1 = active = ON (the devicetree flags handle ACTIVE_LOW for us)
         int ret = gpio_pin_set_dt(&config->led, 1);
@@ -53,9 +68,23 @@ static int channel_get_my_impl(const struct device *dev,
         return 0;
     }
 
+// Custom extension API (declared in our_driver.h): changes led_enabled in the dynamic data
+int our_driver_set_led_enabled(const struct device *dev, bool enable)
+{
+    struct our_driver_data *data = dev->data;
+
+    data->led_enabled = enable;
+    LOG_INF("LED2 %s", enable ? "ENABLED" : "DISABLED");
+    return 0;
+}
+
 // Init function
 static int init(const struct device* dev) {
     const struct our_driver_config *config = dev->config;
+    struct our_driver_data *data = dev->data;
+
+    data->led_enabled = true;
+    data->fetch_count = 0;
 
     if (!gpio_is_ready_dt(&config->led)) return -ENODEV;
 
@@ -102,4 +131,7 @@ static const struct our_driver_config config0 = {
     .led = GPIO_DT_SPEC_GET(DT_INST_PHANDLE(0, led), gpios),
 };
 
-DEVICE_DT_INST_DEFINE(0, init, NULL, NULL, &config0, POST_KERNEL, 80, &api_barry_nordic);
+// Dynamic data for instance 0 (not const: the driver writes to it)
+static struct our_driver_data data0;
+
+DEVICE_DT_INST_DEFINE(0, init, NULL, &data0, &config0, POST_KERNEL, 80, &api_barry_nordic);

@@ -3,6 +3,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include "our_driver.h"
+
 // refer to Heartbeat LED 
 //#define LED_NODE DT_ALIAS(led1)
 #define HBEAT_LED_NODE DT_ALIAS(app_led)
@@ -42,6 +44,10 @@ int main(void)
 {
     bool led_state = true;
     bool hbeat_led_state = true;
+    // Used to switch LED2 on/off via our custom extension API every 10 heartbeats
+    const struct device* driver = DEVICE_DT_GET(DT_NODELABEL(our_driver0));
+    int heartbeat_count = 0;
+    bool led2_enabled = true;
 
    // if (!gpio_is_ready_dt(&led)) return 0;
     //if (gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE) < 0) return 0;
@@ -67,6 +73,12 @@ int main(void)
         LOG_INF("Heartbeat LED state: %s", hbeat_led_state ? "ON" : "OFF");
         // Ask our driver to turn LED2 ON (fetch) or OFF (channel get) to match the heartbeat
         test(hbeat_led_state);
+
+        // Every 10 heartbeats, call our custom extension API to enable/disable LED2
+        if (++heartbeat_count % 10 == 0) {
+            led2_enabled = !led2_enabled;
+            our_driver_set_led_enabled(driver, led2_enabled);
+        }
         // WAIT for HEARTBEAT Delay Heart beat LED
         k_msleep(CONFIG_APP_HEARTBEAT_PERIOD_MS);
     }
