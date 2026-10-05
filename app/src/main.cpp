@@ -66,7 +66,7 @@ int main(void)
         // Print out the Heartbeat led state
         LOG_INF("Heartbeat LED state: %s", hbeat_led_state ? "ON" : "OFF");
         // Ask our driver to turn LED2 ON (fetch) or OFF (channel get) to match the heartbeat
-        test(hbeat_led_state);
+        //test(hbeat_led_state);
         // WAIT for HEARTBEAT Delay Heart beat LED
         k_msleep(CONFIG_APP_HEARTBEAT_PERIOD_MS);
     }
